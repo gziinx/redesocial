@@ -33,17 +33,17 @@ function updatePassword(id, novaSenha, confirmarSenha) {
     });
 }
 
-// Evento para capturar o submit do formulário
-document.getElementById('login-form').addEventListener('submit', function(event) {
-    event.preventDefault(); // Evita o comportamento padrão de envio do formulário
 
-    // Pega os valores dos campos de senha
+document.getElementById('login-form').addEventListener('submit', function(event) {
+    event.preventDefault(); 
+
+
     const novaSenha = document.getElementById('password').value;
     const confirmarSenha = document.getElementById('password1').value;
 
-    // Define o ID do usuário, você pode pegar isso de algum lugar, ou como um exemplo fixo
-    const id = 2; // Exemplo, substitua com o valor real
 
-    // Chama a função para atualizar a senha
+    const id = 2; 
+
+ 
     updatePassword(id, novaSenha, confirmarSenha);
 });
