@@ -27,7 +27,7 @@ document.getElementById('login-form').addEventListener('submit', async function 
 
     if (response.ok) {
         alert('voce conseguiu logar')
-        
+        window.location.href = 'index.html';
     } else {
         alert('nao deu')
     }
