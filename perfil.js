@@ -1,59 +1,79 @@
-'use strict';
 
-const usuarioId = parseInt(localStorage.getItem('usuarioId'));
+document.addEventListener("DOMContentLoaded", function () {
+  const urlParams = new URLSearchParams(window.location.search);
+  const userIdFromUrl = urlParams.get("id");
 
-if (!usuarioId) {
-  alert('Usuário não logado!');
-  window.location.href = "index.html";
-}
+  const userData = JSON.parse(localStorage.getItem("userData"));
 
-const urlUsuarios = 'https://back-spider.vercel.app/user/listarUsers';
-const urlPublicacoes = 'https://back-spider.vercel.app/publicacoes/listarPublicacoes';
+  // Verifica se os dados do usuário existem e se o ID bate com o da URL
+  if (!userData || !userIdFromUrl || userData.id != userIdFromUrl) {
+    window.location.href = "login.html";
+    return;
+  }
 
-// Buscar e exibir dados do usuário
-fetch(urlUsuarios)
-  .then(res => res.json())
-  .then(usuarios => {
-    const usuario = usuarios.find(u => u.id === usuarioId);
-    if (!usuario) {
-      alert('Usuário não encontrado!');
-      return;
-    }
+  // Preencher dados do usuário
+  const avatar = document.getElementById("imgg");
+  const username = document.getElementById("username");
+  const created = document.getElementById("created");
+  const nomeCompleto = document.getElementById("nomeCompleto");
+  const posts = document.getElementById("posts");
 
-    document.getElementById('imgg').src = usuario.imagemPerfil;
-    document.getElementById('username').textContent = `@${usuario.nome.toLowerCase()}`;
-    document.getElementById('nomeCompleto').textContent = usuario.nome;
-    document.getElementById('created').innerHTML = 'Conta premium: <br>' + (usuario.premium === "1" ? 'Sim' : 'Não');
-  });
+  if (avatar) avatar.src = userData.imagemPerfil || "imgPerfil/semFoto.png";
+  if (username) username.textContent = "@" + (userData.email?.split("@")[0] || "usuario");
+  if (created) created.innerHTML = "Criado em:<br>" + (userData.criadoEm || "DD/MM/AAAA");
+  if (nomeCompleto) nomeCompleto.textContent = userData.nome || "Nome Sobrenome";
+  if (posts) posts.textContent = userData.posts?.length > 0 ? userData.posts.join("\n") : "O usuário ainda não fez nenhum post...";
 
-// Buscar e exibir posts
-fetch(urlPublicacoes)
-  .then(res => res.json())
-  .then(publicacoes => {
-    const postsUsuario = publicacoes.filter(p => p.usuarioId === usuarioId);
-    const postsContainer = document.getElementById('posts');
-    postsContainer.innerHTML = '';
 
-    if (postsUsuario.length === 0) {
-      postsContainer.innerHTML = 'O usuário ainda não fez nenhum post...';
-      return;
-    }
-
-    postsUsuario.forEach(post => {
-      const div = document.createElement('div');
-      div.style.marginBottom = '20px';
-      div.style.background = '#fff';
-      div.style.padding = '15px';
-      div.style.borderRadius = '10px';
-      div.style.boxShadow = '0 0 5px rgba(0,0,0,0.2)';
-      
-      div.innerHTML = `
-        <img src="${post.imagem}" style="width: 100%; max-height: 300px; object-fit: cover; border-radius: 10px;" alt="Imagem do post">
-        <h3 style="margin-top: 10px;">${post.descricao}</h3>
-        <p><strong>Local:</strong> ${post.local}</p>
-        <p><strong>Data:</strong> ${post.dataPublicacao}</p>
-        <p><strong>Comentários:</strong> ${post.comentarios.length} | <strong>Curtidas:</strong> ${post.curtidas.length}</p>
-      `;
-      postsContainer.appendChild(div);
+  // Atualizar avatar
+  const avatarInput = document.getElementById("fileInput");
+  if (avatarInput) {
+    avatarInput.addEventListener("change", function () {
+      const file = avatarInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          if (avatarElement) avatarElement.src = e.target.result;
+          if (headerPicElement) headerPicElement.src = e.target.result;
+          salvarImagem("imagemPerfil", e.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
     });
-  });
+  }
+
+  // Atualizar banner
+  const bannerInput = document.getElementById("bannerInput");
+  if (bannerInput) {
+    bannerInput.addEventListener("change", function (event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          if (bannerElement) bannerElement.src = e.target.result;
+          salvarImagem("banner", e.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  function salvarImagem(campo, imagemBase64) {
+    fetch(`https://back-spider.vercel.app/user/update/${userData.id}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ [campo]: imagemBase64 }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Imagem atualizada com sucesso", data);
+        userData[campo] = imagemBase64;
+        localStorage.setItem("userData", JSON.stringify(userData));
+      })
+      .catch((err) => {
+        console.error("Erro ao salvar imagem:", err);
+      });
+  }
+});

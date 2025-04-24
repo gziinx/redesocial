@@ -1,27 +1,52 @@
-'use strict';
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("login-form");
+  const emailInput = document.getElementById("email");
+  const passwordInput = document.getElementById("senha");  // Corrigido para "senha", conforme o HTML
 
-document.getElementById('login-form').addEventListener('submit', async function (event) {
-  event.preventDefault();
+  async function submitForm(event) {
+    event.preventDefault();
 
-  const email = document.getElementById('email').value;
-  const senha = document.getElementById('senha').value;
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
 
-  const options = {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, senha })
-  };
+    const formData = {
+      email: email,
+      senha: password
+    };
 
-  const response = await fetch('https://back-spider.vercel.app/login', options);
+    const loginUrl = "https://back-spider.vercel.app/login"; // URL do servidor de login
 
-  if (response.ok) {
-    const usuario = await response.json();
-    console.log('Resposta da API:', usuario); 
+    try {
+      const response = await fetch(loginUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
-    localStorage.setItem('usuarioId', usuario.id);
-    alert('Você conseguiu logar!');
-    window.location.href = 'perfil.html';
-  } else {
-    alert('Não foi possível fazer login.');
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+          console.log("Login bem-sucedido:", data);
+        
+          // Armazenar os dados do usuário corretamente
+          localStorage.setItem("userData", JSON.stringify(data.user));
+        
+          // Redirecionar para o perfil com o ID correto
+          window.location.href = `perfil.html?id=${data.user.id}`;
+        } else {
+          console.error('Erro ao realizar login:', data);
+          alert(data.message || "Erro ao realizar login. Tente novamente.");
+        }          
+    } catch (error) {
+      console.error('Erro ao enviar dados:', error);
+      alert("Erro de rede ou no servidor.");
+    } finally {
+      emailInput.value = "";
+      passwordInput.value = "";
+    }
   }
+
+  form.addEventListener("submit", submitForm);
 });
