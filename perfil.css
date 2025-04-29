@@ -86,3 +86,8 @@ body{
     justify-self: start;
     font-size: 20px;
 }
+.menu a{
+    margin-left: auto;
+    font-size: 21px;
+    color: white;
+}
